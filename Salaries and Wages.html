@@ -1,0 +1,1117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditing A2S1 – Salaries & Wages Cycle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;600&display=swap');
+
+  :root {
+    --navy:   #162035;
+    --purple: #4a2c7a;
+    --gold:   #e0a832;
+    --teal:   #1e7c6b;
+    --red:    #b83232;
+    --cream:  #f6f5f2;
+    --white:  #ffffff;
+    --muted:  #64748b;
+    --border: #ddd8f0;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
+  header {
+    background: linear-gradient(135deg, #162035 0%, #2d1a52 100%);
+    color: white;
+    padding: 26px 32px 18px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 24px rgba(0,0,0,0.35);
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+  }
+
+  header p { font-size: 0.8rem; color: #aab0c8; margin-top: 3px; }
+
+  .exam-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  nav {
+    display: flex;
+    gap: 7px;
+    padding: 12px 28px;
+    background: #eeecf8;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    flex-wrap: wrap;
+  }
+
+  nav button {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 14px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  nav button:hover, nav button.active {
+    background: var(--purple);
+    color: var(--gold);
+    border-color: var(--purple);
+  }
+
+  main {
+    max-width: 930px;
+    margin: 0 auto;
+    padding: 30px 24px 70px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    color: var(--navy);
+    margin-bottom: 5px;
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.88rem;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 10px;
+  }
+
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--gold);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  }
+
+  .card.purple { border-left-color: var(--purple); }
+  .card.teal   { border-left-color: var(--teal);   }
+  .card.red    { border-left-color: var(--red);    }
+  .card.navy   { border-left-color: var(--navy);   }
+
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+    color: var(--navy);
+  }
+
+  .card ul { padding-left: 18px; }
+  .card ul li { margin-bottom: 7px; font-size: 0.89rem; line-height: 1.55; }
+
+  .tip-box {
+    background: #fdf6e3;
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 13px 18px;
+    margin-bottom: 14px;
+    font-size: 0.87rem;
+    line-height: 1.55;
+  }
+
+  .tip-box strong { color: var(--navy); }
+  .highlight { background: #fff3cd; padding: 1px 5px; border-radius: 3px; font-weight: 600; }
+
+  .pill {
+    display: inline-block;
+    font-size: 0.7rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 2px 9px;
+    border-radius: 20px;
+    letter-spacing: 0.6px;
+    margin-right: 4px; margin-bottom: 4px;
+  }
+
+  .pill.blue   { background: #ddeeff; color: #1a4a7a; }
+  .pill.green  { background: #d4f0e0; color: #1a6e3c; }
+  .pill.red    { background: #fce8e8; color: #7a1a1a; }
+  .pill.purple { background: #ede8f8; color: #4a2c7a; }
+
+  /* Process flow */
+  .process-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    margin-bottom: 24px;
+  }
+
+  .process-step {
+    background: white;
+    border-radius: 10px;
+    padding: 16px 20px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    border-left: 5px solid var(--purple);
+    margin-bottom: 4px;
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+  }
+
+  .step-num {
+    background: var(--purple);
+    color: white;
+    font-weight: 700;
+    font-size: 0.85rem;
+    min-width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+  }
+
+  .step-content h4 { font-size: 0.9rem; font-weight: 700; margin-bottom: 4px; color: var(--navy); }
+  .step-content p  { font-size: 0.82rem; color: var(--muted); line-height: 1.5; }
+
+  .step-arrow { text-align: center; color: var(--gold); font-size: 1.2rem; margin: 2px 0; }
+
+  /* Differences table */
+  .diff-table {
+    width: 100%;
+    border-collapse: collapse;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+    font-size: 0.86rem;
+  }
+
+  .diff-table th {
+    background: var(--purple);
+    color: var(--gold);
+    font-family: 'Playfair Display', serif;
+    padding: 11px 14px;
+    text-align: left;
+  }
+
+  .diff-table td { padding: 10px 14px; border-bottom: 1px solid #eeeaf8; vertical-align: top; line-height: 1.5; }
+  .diff-table tr:last-child td { border-bottom: none; }
+  .diff-table tr:nth-child(even) td { background: #f9f8fd; }
+  .diff-table td:first-child { font-weight: 700; color: var(--purple); width: 25%; }
+
+  /* WRC table */
+  .wrc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.84rem;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+    margin-bottom: 20px;
+  }
+
+  .wrc-table th {
+    background: var(--navy);
+    color: var(--gold);
+    font-family: 'Playfair Display', serif;
+    padding: 11px 13px;
+    text-align: left;
+    font-size: 0.88rem;
+  }
+
+  .wrc-table td {
+    padding: 11px 13px;
+    border-bottom: 1px solid #eef0f8;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .wrc-table tr:last-child td { border-bottom: none; }
+  .wrc-table tr:nth-child(even) td { background: #f8f9fd; }
+  .wrc-table td:nth-child(1) { font-weight: 600; color: var(--red); width: 28%; }
+  .wrc-table td:nth-child(2) { color: #555; width: 30%; }
+  .wrc-table td:nth-child(3) { color: var(--teal); font-weight: 500; width: 42%; }
+
+  .section-label {
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--purple);
+    margin: 22px 0 8px;
+  }
+
+  /* Accordion */
+  .accordion-btn {
+    width: 100%;
+    text-align: left;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 13px 18px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.9rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
+  }
+
+  .accordion-btn:hover { background: #2a3a60; }
+  .accordion-btn.open  { background: var(--purple); }
+  .chevron { font-size: 0.75rem; transition: transform 0.2s; }
+  .accordion-btn.open .chevron { transform: rotate(180deg); }
+
+  .accordion-body {
+    display: none;
+    background: white;
+    border-radius: 0 0 8px 8px;
+    padding: 16px 20px;
+    margin-bottom: 12px;
+    border: 1.5px solid var(--border);
+    border-top: none;
+    font-size: 0.87rem;
+    line-height: 1.65;
+  }
+
+  .accordion-body.open { display: block; }
+  .accordion-body ul   { padding-left: 18px; }
+  .accordion-body ul li { margin-bottom: 7px; }
+
+  /* Quiz */
+  .quiz-card {
+    background: white;
+    border-radius: 12px;
+    padding: 26px 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+    margin-bottom: 20px;
+  }
+
+  .quiz-q {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--navy);
+    margin-bottom: 18px;
+    line-height: 1.55;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+
+  .quiz-options button {
+    text-align: left;
+    background: #f6f5f2;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 0.87rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .quiz-options button:hover:not(:disabled) { border-color: var(--purple); background: #f0eef8; }
+  .quiz-options button.correct { background: #e4f5ec; border-color: var(--teal); color: #1a5c3a; font-weight: 600; }
+  .quiz-options button.wrong   { background: #fce8e8; border-color: var(--red);  color: var(--red); }
+
+  .quiz-feedback {
+    margin-top: 14px; padding: 12px 16px; border-radius: 8px;
+    font-size: 0.87rem; line-height: 1.5; display: none;
+  }
+
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.good { background: #e4f5ec; color: #1a5c3a; border-left: 3px solid var(--teal); }
+  .quiz-feedback.bad  { background: #fce8e8; color: #7a1a1a; border-left: 3px solid var(--red); }
+
+  .quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .quiz-nav button {
+    background: var(--purple);
+    color: var(--gold);
+    border: none;
+    border-radius: 7px;
+    padding: 10px 22px;
+    font-family: 'DM Sans', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .quiz-nav button:hover    { opacity: 0.85; }
+  .quiz-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+  .quiz-progress { font-size: 0.82rem; color: var(--muted); font-weight: 600; }
+
+  .score-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.88rem;
+  }
+
+  .two-col {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 14px;
+    margin-bottom: 16px;
+  }
+
+  @media (max-width: 600px) { .two-col { grid-template-columns: 1fr; } }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Auditing A2S1 – Salaries & Wages Cycle</h1>
+  <p>Interactive Study Guide · Exam Friday</p>
+  <span class="exam-badge">💼 Exam Prep</span>
+</header>
+
+<nav>
+  <button class="active" onclick="showSection('overview')">📋 Overview</button>
+  <button onclick="showSection('difference')">⚖️ Salaries vs Wages</button>
+  <button onclick="showSection('documents')">📄 Documents & Flow</button>
+  <button onclick="showSection('perfect')">✅ Perfect System</button>
+  <button onclick="showSection('wrc')">⚠️ Weaknesses (WRC)</button>
+  <button onclick="showSection('objectives')">🎯 Control Objectives</button>
+  <button onclick="showSection('quiz')">✏️ Quiz Yourself</button>
+</nav>
+
+<main>
+
+<!-- OVERVIEW -->
+<div class="section active" id="overview">
+  <h2>Overview</h2>
+  <p class="subtitle">The Salaries & Wages Cycle — what makes it unique and how it's examined</p>
+
+  <div class="tip-box">
+    <strong>📌 What makes this cycle special:</strong> It is an <em>internally generated</em> transaction — there is no external document to trigger payment. This makes it high risk for fictitious employees and fraud. The cycle has <span class="highlight">two sub-cycles</span>: <strong>Wages</strong> (hourly workers, clock cards, paid weekly in cash) and <strong>Salaries</strong> (fixed monthly amount, paid by EFT).
+  </div>
+
+  <div class="card purple">
+    <h3>Why is this cycle high-risk?</h3>
+    <ul>
+      <li><strong>Material expense</strong> — wages affect inventory valuation (IAS 2); salaries are a significant cost</li>
+      <li><strong>Impacts cash directly</strong> — large cash payouts create theft and fraud risk</li>
+      <li><strong>Internally generated</strong> — no purchase order or external invoice; the company creates its own records</li>
+      <li><strong>High volume of transactions</strong> — many employees, many periods, many possible errors</li>
+      <li><strong>Fictitious employees</strong> — the biggest fraud risk: ghost employees created to siphon wages</li>
+    </ul>
+  </div>
+
+  <div class="card navy">
+    <h3>V · A · C Applied to This Cycle</h3>
+    <ul>
+      <li><span class="pill blue">Validity</span> Payments only to real, properly appointed employees · only for hours actually worked · at authorised tariffs · deductions properly authorised · dismissals authorised</li>
+      <li><span class="pill green">Accuracy</span> Correct hours × correct tariff = correct gross wage · correct deductions · correct net pay · correct classification (wages vs salaries vs expense)</li>
+      <li><span class="pill red">Completeness</span> All employees are paid · all wage transactions recorded · all deductions paid to third parties · no omissions</li>
+    </ul>
+  </div>
+
+  <div class="card teal">
+    <h3>The 5 Stages of the Cycle</h3>
+    <ul>
+      <li><strong>1. Appointments & Authorisation</strong> — hiring, contracts, employee files</li>
+      <li><strong>2. Timekeeping</strong> (Wages only) — clock cards, supervision, hours worked</li>
+      <li><strong>3. Calculation & Preparation of Payroll</strong> — wages journal / salary journal</li>
+      <li><strong>4. Payment</strong> — wage envelopes (wages) or EFT (salaries) · unclaimed wages</li>
+      <li><strong>5. Deductions to Third Parties</strong> — SARS (PAYE), UIF, pension, medical aid</li>
+    </ul>
+  </div>
+</div>
+
+<!-- SALARIES vs WAGES -->
+<div class="section" id="difference">
+  <h2>Salaries vs Wages</h2>
+  <p class="subtitle">Know the key differences — the exam often tests both and the controls differ significantly</p>
+
+  <table class="diff-table">
+    <tr>
+      <th>Feature</th>
+      <th>🧾 Wages</th>
+      <th>📋 Salaries</th>
+    </tr>
+    <tr>
+      <td>Basis of pay</td>
+      <td>Paid for productive hours worked (hourly rate)</td>
+      <td>Fixed pre-determined monthly amount (basic salary)</td>
+    </tr>
+    <tr>
+      <td>Frequency</td>
+      <td>Paid <strong>weekly</strong></td>
+      <td>Paid <strong>monthly</strong></td>
+    </tr>
+    <tr>
+      <td>Payment method</td>
+      <td>Cash (wage envelopes)</td>
+      <td>EFT (electronic transfer to bank account)</td>
+    </tr>
+    <tr>
+      <td>Timekeeping</td>
+      <td><strong>Clock cards required</strong> — time worked must be recorded and authorised</td>
+      <td>No clock cards — hours do not affect pay</td>
+    </tr>
+    <tr>
+      <td>Key document</td>
+      <td>Clock card → Wages Journal</td>
+      <td>Appointment letter / Tariff form → Salary Journal</td>
+    </tr>
+    <tr>
+      <td>Calculation</td>
+      <td>Hours worked × Tariff per hour − Deductions = Net Wage</td>
+      <td>Basic Salary + Allowances/Fringe Benefits − Deductions = Net Salary</td>
+    </tr>
+    <tr>
+      <td>Unclaimed</td>
+      <td><strong>Unclaimed wages possible</strong> — must be recorded in unclaimed wage register and locked in safe</td>
+      <td>No unclaimed wages — EFT goes directly to bank account</td>
+    </tr>
+    <tr>
+      <td>Fraud risk</td>
+      <td>Ghost employees, buddy clocking (clocking in for others), inflated hours</td>
+      <td>Ghost employees, fictitious salary increases, unauthorised allowances</td>
+    </tr>
+  </table>
+
+  <div class="tip-box">
+    <strong>💡 Calculation formula to memorise:</strong><br>
+    <strong>Wages:</strong> Hours worked (clock card) × Tariff (appointment letter / tariff amendment form) = Gross Wage − Deductions (deduction authorisation form) = <strong>Net Wage</strong><br><br>
+    <strong>Salaries:</strong> Basic Salary (appointment letter / tariff form) + Allowances / Fringe Benefits − Deductions (deduction authorisation form) = <strong>Net Salary</strong>
+  </div>
+</div>
+
+<!-- DOCUMENTS -->
+<div class="section" id="documents">
+  <h2>Documents & Flow</h2>
+  <p class="subtitle">Know every document, who prepares it, its purpose, and how many copies</p>
+
+  <p class="section-label">Appointment & Personnel Records</p>
+  <div class="two-col">
+    <div class="card purple">
+      <h3>Appointment Contract</h3>
+      <ul>
+        <li>Prepared by HR after candidate is selected</li>
+        <li>Contains: appointment conditions, compensation, fringe benefits, deductions</li>
+        <li>Signed by HR Manager AND employee</li>
+        <li><strong>2 copies:</strong> employee + HR file</li>
+        <li>Triggers creation of employee file and deduction authorisation form</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Employee File (Permanent File)</h3>
+      <ul>
+        <li>Created for every appointed employee</li>
+        <li>Contains: appointment letter, employee number, appointment date, compensation, fringe benefits, deductions</li>
+        <li>Maintained by HR — independent of payroll</li>
+        <li>Used to verify details in wages/salary journal</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Deduction Authorisation Form</h3>
+      <ul>
+        <li>Authorises non-statutory deductions (e.g. pension, medical aid)</li>
+        <li>Signed by employee AND HR Manager</li>
+        <li>Required by law before including deductions in contract</li>
+        <li><strong>2 copies:</strong> employee + HR file</li>
+      </ul>
+    </div>
+    <div class="card purple">
+      <h3>Tariff / Scale Amendment Form</h3>
+      <ul>
+        <li>Used when an employee's tariff/salary rate changes</li>
+        <li>Signed by employee AND line manager AND HR manager</li>
+        <li>Filed in employee file — used to verify tariff in wages journal</li>
+      </ul>
+    </div>
+  </div>
+
+  <p class="section-label">Timekeeping (Wages Only)</p>
+  <div class="card teal">
+    <h3>Clock Card (Time Card)</h3>
+    <ul>
+      <li><strong>Pre-numbered and pre-printed</strong> — kept in a safe</li>
+      <li>Contains: employee name, employee number, date of the week</li>
+      <li>Issued Monday by admin clerk — employee must show staff card to receive it; admin clerk signs register</li>
+      <li>Employee clocks in/out using clock machine at the factory entrance — machine prints times automatically</li>
+      <li>At end of week: admin clerk calculates and records normal + overtime hours; supervisor/foreman authorises by signing</li>
+      <li>Returned to payroll clerk — a <strong>clock card register</strong> tracks issue and return</li>
+      <li><strong>Sequence check</strong> performed — missing or duplicate cards investigated</li>
+    </ul>
+  </div>
+
+  <p class="section-label">Payroll Documents</p>
+  <div class="two-col">
+    <div class="card navy">
+      <h3>Wages Journal (weekly)</h3>
+      <ul>
+        <li>Prepared by Payroll Clerk A</li>
+        <li>Contains: employee number, name, hours worked, tariff, gross wage, deductions, net wage, total wages for week</li>
+        <li>Reviewed and signed by Payroll Clerk B (independent)</li>
+        <li>Authorised by Payroll Manager (sample checks + budget comparison)</li>
+        <li>Signed by Financial Manager before payment</li>
+      </ul>
+    </div>
+    <div class="card navy">
+      <h3>Salary Journal (monthly)</h3>
+      <ul>
+        <li>Prepared by Payroll Clerk A</li>
+        <li>Contains: employee number, name, date, scale/grade, allowances, deductions, gross & net salary</li>
+        <li>Reviewed by Payroll Clerk B (independent)</li>
+        <li>Authorised by Payroll Manager</li>
+        <li>Used as basis for EFT payment requisition</li>
+      </ul>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>Other Key Documents</h3>
+    <ul>
+      <li><strong>Wage Slip / Pay Slip</strong> — given to each employee (2 copies: employee + payroll); shows transactions per employee + year-to-date totals</li>
+      <li><strong>Wage Pay-out Register</strong> — employees sign when collecting their wage envelope</li>
+      <li><strong>Unclaimed Wage Register</strong> — records all wage envelopes not collected at pay-out</li>
+      <li><strong>IRP5 Form</strong> — annual document per employee showing total payments received and tax deducted; used to pay PAYE to SARS</li>
+      <li><strong>EFT Payment Requisition</strong> — triggers electronic salary payments; prepared by Payroll Clerk B, reviewed by Payroll Manager, authorised by Financial Manager</li>
+    </ul>
+  </div>
+</div>
+
+<!-- PERFECT SYSTEM -->
+<div class="section" id="perfect">
+  <h2>The Perfect System</h2>
+  <p class="subtitle">What the ideal wages/salaries system looks like — compare this to the scenario in the question</p>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Stage 1: Appointments & Authorisation <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li>Line manager submits a <strong>motivation for appointment</strong> to HR with job specifications — HR approves the need for the appointment (considering budget)</li>
+      <li>Advertisement placed internally and externally — applications reviewed by HR against job specs</li>
+      <li><strong>At least two people</strong> (line manager + HR manager) conduct the interview</li>
+      <li>Shortlist compiled and reviewed by an <strong>independent second person</strong></li>
+      <li>Before finalising: follow up references, check criminal record, verify qualifications, check aptitude/competency test results, copy ID, obtain proof of address and bank details</li>
+      <li>Appointment contract signed by <strong>HR Manager AND employee</strong> — 2 copies</li>
+      <li>Employee file (permanent record) created for every employee — maintained by HR (independent of payroll)</li>
+      <li>Deduction authorisation form completed and signed by employee and HR manager</li>
+      <li><strong>Termination of service form</strong> prepared when employee leaves — signed by line manager and HR manager — prevents ghost employees</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Stage 2: Timekeeping (Wages) <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li>Clock cards are <strong>pre-numbered, pre-printed</strong> and stored in a safe</li>
+      <li>Admin Clerk A issues clock cards on Monday — employee must show staff card as identification; admin clerk signs a <strong>clock card register</strong></li>
+      <li>Employee signs the clock card register as proof of receipt</li>
+      <li>Clock machine located at the <strong>entrance of the workspace</strong> — increases visibility</li>
+      <li><strong>Foreman is present</strong> during clock-in and clock-out to supervise — ensures employees clock themselves (not others)</li>
+      <li>When overtime is worked: foreman remains on duty until the last employee leaves</li>
+      <li>At end of week: Admin Clerk B (different from A) calculates normal and overtime hours and records on clock card</li>
+      <li><strong>Foreman / supervisor authorises</strong> clock cards by signing — specifically approves overtime</li>
+      <li>Admin Clerk A reconciles clock cards returned to the number issued per the register — follows up missing cards</li>
+      <li>Employee signs the register when returning the clock card</li>
+      <li>Independent person checks the <strong>number sequence</strong> of clock cards and investigates missing or duplicate numbers</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Stage 3: Calculation & Preparation of Payroll <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li><strong>Payroll Clerk A</strong> prepares the wages/salary journal — obtains hours from approved clock cards, tariff from appointment letter/tariff form, deductions from deduction authorisation form</li>
+      <li><strong>Payroll Clerk B</strong> (independent review) checks:
+        <ul>
+          <li>Hours to clock cards</li>
+          <li>Tariff to appointment letter or tariff amendment form</li>
+          <li>Deductions to deduction authorisation form</li>
+          <li>Number of employees agrees to updated employee list from HR</li>
+          <li>Recalculates all calculations and signs as evidence</li>
+        </ul>
+      </li>
+      <li><strong>Payroll Manager</strong> authorises — performs above checks on a sample, compares total to budget, investigates differences or unusual items, signs journal</li>
+      <li><strong>Financial Manager</strong> reviews details of wage/salary journal, recalculates, signs before payment is released</li>
+      <li>Reconcile current week/month's payroll to the <strong>prior period</strong> — follow up on differences (new employees, terminations, changes)</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Stage 4: Wage Payment (Cash Pay-out) <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <p style="margin-bottom:10px"><strong>Preparation of wage envelopes:</strong></p>
+    <ul>
+      <li>Two payroll clerks <strong>independent of the wage journal process</strong> make up wage envelopes based on the approved wage journal</li>
+      <li>Each checks the other's work (independent review)</li>
+      <li>Wage envelopes are <strong>locked away in a safe</strong> until pay-out</li>
+    </ul>
+    <p style="margin: 12px 0 8px"><strong>Safekeeping and custody:</strong></p>
+    <ul>
+      <li>Line manager/department supervisor compares number of envelopes to list of employees and signs wage journal if satisfied</li>
+    </ul>
+    <p style="margin: 12px 0 8px"><strong>Wage pay-out:</strong></p>
+    <ul>
+      <li>Wage envelopes handed out by <strong>two independent people</strong> (line manager/supervisor + another independent person)</li>
+      <li>Upon collection, employee must:
+        <ul>
+          <li><strong>Identify themselves</strong> (show staff card/ID)</li>
+          <li><strong>Count money</strong> in envelope and compare to wage slip</li>
+          <li><strong>Sign the wage pay-out register</strong> as proof of receipt</li>
+        </ul>
+      </li>
+      <li>Employee is <strong>not allowed</strong> to collect an envelope on behalf of someone else</li>
+      <li>Both payout officials sign the wage pay-out register at the end of the pay-out</li>
+    </ul>
+    <p style="margin: 12px 0 8px"><strong>Unclaimed wages:</strong></p>
+    <ul>
+      <li>Line manager records unclaimed envelopes in the <strong>unclaimed wage register</strong></li>
+      <li>Payroll secretary takes custody and stores in a <strong>safe</strong>; signs register as evidence of custody</li>
+      <li>When employee collects: identify themselves, count money, compare to wage slip and register, sign register</li>
+      <li>If not collected within a reasonable period: <strong>deposit back into business bank account</strong> using unclaimed wage register as supporting document</li>
+      <li>Independent manager follows up on <strong>long-outstanding unclaimed wages</strong> and employees who regularly appear on unclaimed wage register</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Stage 4B: Salary Payment (EFT) <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li>Before releasing payment, verify: employee banking details against personnel records; payment from designated salary bank account; number of payments agrees to employee list; amounts agree to pay slips and salary journal</li>
+      <li><strong>Payroll Clerk B</strong> loads EFT on internet banking</li>
+      <li><strong>Payroll Manager (Approver A)</strong> — reviews and approves salary journal, then loads payment</li>
+      <li><strong>Financial Manager (Approver B)</strong> — reviews salary journal, releases/authorises the EFT payment, and stamps wage journal as <strong>"PAID/CANCELLED"</strong></li>
+      <li>Salary journal entries posted to <strong>general ledger</strong>; monthly bank reconciliation performed</li>
+    </ul>
+  </div>
+</div>
+
+<!-- WRC -->
+<div class="section" id="wrc">
+  <h2>Weaknesses, Consequences & Recommendations</h2>
+  <p class="subtitle">From S4.30 (Ceramics) and your study material — the most exam-tested weaknesses per stage</p>
+
+  <div class="tip-box">
+    <strong>📌 Exam structure:</strong> WRC questions are split by stage — Timekeeping / Calculation & Preparation / Wage Pay-out. Each row = 3 marks. Consequences often relate to <em>fictitious employees, ghost payments, buddy clocking, theft</em>, or <em>inability to allocate responsibility</em>.
+  </div>
+
+  <p class="section-label">Timekeeping Weaknesses</p>
+  <table class="wrc-table">
+    <tr><th>Weakness</th><th>Consequence</th><th>Recommendation</th></tr>
+    <tr>
+      <td>No supervision during clock-in and clock-out process</td>
+      <td>Employees can clock in/out for other employees (buddy clocking) — particularly when foreman is not present at the entry/exit point</td>
+      <td>Foreman must be present during all clock-in and clock-out processes AND must remain on duty during overtime until the last employee leaves</td>
+    </tr>
+    <tr>
+      <td>No review of the number sequence of clock cards AND no clock card register used for issue and return</td>
+      <td>Duplicate clock cards may exist and go undetected; clock cards can go missing; not all clock cards accounted for</td>
+      <td>Foreman (or independent person) must review number sequence of clock cards at end of each week and follow up missing/duplicate numbers AND a clock card register must be used to record issue and return of all clock cards</td>
+    </tr>
+    <tr>
+      <td>Blank clock cards are not stored securely (e.g. left in a box on the secretary's desk)</td>
+      <td>Blank clock cards can be stolen and used to create fictitious employees; ghost workers can be added to payroll</td>
+      <td>All pre-numbered clock cards must be kept in a locked safe until issued; access restricted to the responsible admin clerk</td>
+    </tr>
+    <tr>
+      <td>Employees collect their own clock cards without showing identification</td>
+      <td>Employees can take clock cards for other (possibly fictitious) employees; responsibility cannot be allocated</td>
+      <td>Admin clerk must only hand clock cards to employees personally upon presentation of their staff card; admin clerk signs the clock card register as evidence</td>
+    </tr>
+    <tr>
+      <td>Admin clerk calculates hours AND the foreman approves hours worked — same foreman also approves the wage journal</td>
+      <td>Insufficient SoD — foreman can create fictitious hours in timekeeping and then approve them in the wages journal without independent check</td>
+      <td>The two functions must be separated: one person approves normal/overtime hours; a DIFFERENT independent person approves the wage journal</td>
+    </tr>
+  </table>
+
+  <p class="section-label">Calculation & Preparation Weaknesses</p>
+  <table class="wrc-table">
+    <tr><th>Weakness</th><th>Consequence</th><th>Recommendation</th></tr>
+    <tr>
+      <td>No independent review/checking of the wage journal calculations</td>
+      <td>Incorrect calculations go undetected; employees paid wrong amounts; deliberate manipulation not caught</td>
+      <td>Payroll Clerk B (independent of Clerk A) must check hours against clock cards, tariff against appointment letter/tariff form, deductions against authorisation form, and recalculate — sign as evidence</td>
+    </tr>
+    <tr>
+      <td>Number of employees in wage journal is NOT agreed to the updated employee list from HR</td>
+      <td>Fictitious (ghost) employees can be added to the payroll without detection</td>
+      <td>Payroll Clerk B must agree the number of employees in the wages journal to the current, updated employee list maintained by HR</td>
+    </tr>
+    <tr>
+      <td>No reconciliation of current period wages to the prior period</td>
+      <td>Unusual increases, new fictitious employees, or terminated employees still being paid are not detected</td>
+      <td>Payroll Clerk B (or senior payroll clerk) must reconcile number of employees, hours, tariffs, and deductions to the prior week/month and follow up on any differences</td>
+    </tr>
+    <tr>
+      <td>Payroll manager does not compare total wages to budget before authorising</td>
+      <td>Overpayments, fictitious employees, or unauthorised increases are not detected at management level</td>
+      <td>Payroll manager must compare total wages/salaries to the budget and investigate any differences or unusual items before signing the journal</td>
+    </tr>
+    <tr>
+      <td>Increases are not approved in writing (no tariff amendment form completed)</td>
+      <td>Unauthorised or incorrect increases can be granted; employees can be paid the wrong amount; disputes cannot be resolved</td>
+      <td>All tariff/salary increases must be documented on a tariff amendment form, signed by the employee, line manager, and HR manager, and filed in the employee's permanent file</td>
+    </tr>
+  </table>
+
+  <p class="section-label">Wage Pay-out Weaknesses (S4.30 — Ceramics)</p>
+  <table class="wrc-table">
+    <tr><th>Weakness</th><th>Consequence</th><th>Recommendation</th></tr>
+    <tr>
+      <td>Sealed wage envelopes are stored in a cupboard (NOT a locked safe) in the accounting department</td>
+      <td>One or more wage envelopes can be stolen before the pay-out</td>
+      <td>Sealed wage envelopes must be locked away in a safe until the pay-out takes place</td>
+    </tr>
+    <tr>
+      <td>No identification of employees takes place when wages are paid out</td>
+      <td>Wages can be paid to non-employees; wages can be stolen if one employee collects for another</td>
+      <td>Employees must identify themselves (show staff card or ID) before receiving their wage envelope; wages must be paid to employees in person only — collection on behalf of someone else is not permitted</td>
+    </tr>
+    <tr>
+      <td>Employee does NOT check the amount in the wage envelope at pay-out AND does NOT sign for receipt</td>
+      <td>Errors in wage envelopes go undetected; no proof that each employee personally received their wage; responsibility cannot be allocated</td>
+      <td>Employee must open the envelope, count the money, and compare it to the wage slip; employee must sign next to their name on the wage pay-out register as proof of receipt</td>
+    </tr>
+    <tr>
+      <td>Insufficient SoD — same person(s) involved in both preparing wage envelopes AND making up the wage journal</td>
+      <td>Manipulation of amounts in wage envelopes possible without detection; fictitious wages can be paid out</td>
+      <td>Two payroll clerks independent of the wage journal process must make up wage envelopes; they check each other's work; the wage journal preparer must not have access to the physical cash</td>
+    </tr>
+  </table>
+</div>
+
+<!-- CONTROL OBJECTIVES -->
+<div class="section" id="objectives">
+  <h2>Control Objectives</h2>
+  <p class="subtitle">Always start with "To ensure that…" — no people, no actions, no documents. Focus on V · A · C</p>
+
+  <div class="tip-box">
+    <strong>🔑 From S4.30:</strong> When asked for <em>validity only</em> objectives, focus on: authorisation of appointments, actual hours worked, authorised tariffs, authorised deductions, authorised dismissals, and real (non-fictitious) employees.
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Validity Objectives — Wages & Salaries <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li>To ensure that <strong>payment of wages/salaries occurs only to employees whose appointments were properly authorised</strong>. (1)</li>
+      <li>To ensure that <strong>payments of wages are only made for hours actually worked</strong>. (1)</li>
+      <li>To ensure that <strong>payment of wages/salaries takes place at authorised tariffs/rates</strong>. (1)</li>
+      <li>To ensure that <strong>deductions and fringe benefits/allowances are properly authorised</strong>. (1)</li>
+      <li>To ensure that <strong>dismissals are duly authorised</strong>. (1)</li>
+      <li>To ensure that <strong>all payments to employees are made to actual employees of the company</strong> (no fictitious employees). (1)</li>
+      <li>To ensure that <strong>overtime worked is authorised</strong> in accordance with company policy. (1)</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Accuracy Objectives <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li>To ensure that <strong>wages are calculated at the correct hourly rate</strong> and for the correct number of hours worked.</li>
+      <li>To ensure that <strong>all deductions are calculated correctly</strong> and at the correct amounts.</li>
+      <li>To ensure that <strong>net wages/salaries are calculated correctly</strong> (correct gross less correct deductions).</li>
+      <li>To ensure that <strong>wage/salary transactions are recorded at the correct amounts</strong> in the wages/salary journal.</li>
+      <li>To ensure that <strong>wage expenses are correctly classified</strong> in the financial statements.</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Completeness Objectives <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul>
+      <li>To ensure that <strong>all employees are included</strong> in the wages/salary journal and that none are omitted.</li>
+      <li>To ensure that <strong>all wage/salary transactions are recorded</strong> in the correct period.</li>
+      <li>To ensure that <strong>all deductions are paid over to the relevant third parties</strong> (SARS, UIF, pension, medical aid) timeously.</li>
+      <li>To ensure that <strong>no wage/salary transactions are omitted</strong> from the accounting records.</li>
+    </ul>
+  </div>
+
+  <div class="card red" style="margin-top:16px">
+    <h3>⚠️ Common Exam Mistakes</h3>
+    <ul>
+      <li>Writing <em>"The payroll clerk must verify hours against clock cards"</em> — this is a <strong>control</strong>, not an objective. Remove the person, the action, and the document.</li>
+      <li>Forgetting to add <strong>"in terms of company policy"</strong> for validity objectives about authorisation</li>
+      <li>Confusing accuracy (correct amounts) with completeness (all transactions recorded) — they are different marks</li>
+      <li>Writing objectives for accuracy when the question only asks for validity — read the question carefully!</li>
+    </ul>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="section" id="quiz">
+  <h2>Quiz Yourself</h2>
+  <p class="subtitle">12 exam-style questions on the Salaries & Wages Cycle</p>
+
+  <div class="quiz-card" id="quiz-container">
+    <div class="quiz-q" id="quiz-q"></div>
+    <div class="quiz-options" id="quiz-options"></div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+    <div class="quiz-nav">
+      <button onclick="prevQ()" id="btn-prev" disabled>← Prev</button>
+      <span class="quiz-progress" id="quiz-progress"></span>
+      <button onclick="nextQ()" id="btn-next">Next →</button>
+    </div>
+  </div>
+
+  <div id="quiz-score" style="display:none; text-align:center; padding:34px; background:white; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.09)">
+    <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:12px">Quiz Complete!</h3>
+    <p style="font-size:1rem; margin-bottom:18px">Your score: <span class="score-badge" id="final-score"></span></p>
+    <button onclick="restartQuiz()" style="background:var(--purple);color:var(--gold);border:none;border-radius:7px;padding:12px 28px;font-family:'DM Sans',sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer">Try Again</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function toggleAccordion(btn) {
+  btn.classList.toggle('open');
+  btn.nextElementSibling.classList.toggle('open');
+}
+
+const questions = [
+  {
+    q: "What is the KEY difference between wages and salaries in the way they are paid?",
+    opts: [
+      "Wages are paid monthly by EFT; salaries are paid weekly in cash",
+      "Wages are paid weekly in cash based on hours worked; salaries are a fixed monthly amount paid by EFT",
+      "Both are paid by EFT but wages are calculated weekly and salaries monthly",
+      "There is no difference — both are calculated using clock cards"
+    ],
+    correct: 1,
+    explain: "Wages = hourly rate × hours worked, paid weekly in CASH (wage envelopes). Salaries = fixed pre-determined amount, paid MONTHLY by EFT. This is why wages have clock cards and unclaimed wages — salaries have neither."
+  },
+  {
+    q: "Dante Paul (factory foreman) approves overtime hours on clock cards AND approves the wage journal before pay-out. What is the WEAKNESS?",
+    opts: [
+      "Dante should not be allowed to approve overtime — that is HR's job",
+      "Insufficient segregation of duties — Dante is involved in both approving hours and approving the wage journal, meaning he can create fictitious hours and approve them without detection",
+      "Dante should prepare the wage journal himself to maintain control",
+      "The wage journal should not be approved before pay-out"
+    ],
+    correct: 1,
+    explain: "This is insufficient SoD. Because Dante approves both the clock cards (hours worked) AND the wage journal, he could create fictitious hours in timekeeping and then approve them in the journal without any independent check catching it. The two approval functions must be split between different people."
+  },
+  {
+    q: "What is 'buddy clocking' and how is it prevented?",
+    opts: [
+      "When a payroll clerk adds a friend to the payroll as a fictitious employee",
+      "When an employee clocks in or out on behalf of another employee — prevented by the foreman being present at clock-in and clock-out",
+      "When two employees share the same clock card number — prevented by pre-numbering",
+      "When an employee clocks in twice — prevented by the clock machine printing duplicate times"
+    ],
+    correct: 1,
+    explain: "Buddy clocking = an employee swipes another employee's clock card, allowing that absent employee to be paid for hours they didn't work. The key prevention control is the foreman being physically present during clock-in and clock-out to supervise and ensure each employee clocks themselves in."
+  },
+  {
+    q: "Why is it important that the number of employees in the wage journal is agreed to an updated employee list from HR?",
+    opts: [
+      "To ensure the wage journal is formatted correctly",
+      "To detect fictitious (ghost) employees who may have been added to the payroll without a valid employment record in HR",
+      "To confirm that all employees received their wage slips",
+      "To check that the tariffs are correct"
+    ],
+    correct: 1,
+    explain: "Agreeing the wage journal headcount to the HR employee list is the primary control against GHOST EMPLOYEES. If someone adds a fictitious employee to payroll to siphon wages, it will show up as a discrepancy — the journal will have more employees than the HR list."
+  },
+  {
+    q: "Sealed wage envelopes at Ceramics are stored in a cupboard in the accounting department. What is the RECOMMENDATION?",
+    opts: [
+      "The cupboard should be locked and the key given to two people",
+      "The envelopes should be sealed with tape for extra security",
+      "The sealed wage envelopes must be locked away in a safe until the pay-out takes place",
+      "The envelopes should be distributed to employees immediately after being prepared"
+    ],
+    correct: 2,
+    explain: "From S4.30: 'The sealed envelopes should be locked away in a safe until the pay-out.' A cupboard is not sufficiently secure. The consequence of a cupboard is that envelopes can be stolen before the pay-out."
+  },
+  {
+    q: "At wage pay-out, what THREE things must an employee do when collecting their wage envelope?",
+    opts: [
+      "Present their clock card, confirm their address, and open the envelope in front of witnesses",
+      "Identify themselves (show ID/staff card), count the money and compare to their wage slip, and sign the wage pay-out register",
+      "Sign the wage journal, show their appointment contract, and return their clock card",
+      "Sign the clock card register, show their employee number, and confirm their bank details"
+    ],
+    correct: 1,
+    explain: "Three actions at collection: (1) IDENTIFY themselves — show staff card or ID, (2) COUNT money in the envelope and compare to the wage slip to confirm correctness, (3) SIGN the wage pay-out register as proof of personal receipt. No one may collect on behalf of another employee."
+  },
+  {
+    q: "What happens to unclaimed wages that are still not collected after a reasonable period?",
+    opts: [
+      "They are destroyed and written off as an expense",
+      "They are kept in the safe indefinitely until the employee returns",
+      "They are deposited back into the business bank account using the unclaimed wage register as supporting document",
+      "They are redistributed to other employees"
+    ],
+    correct: 2,
+    explain: "If wages are not collected within a reasonable period, the cash must be deposited back into the business bank account. The unclaimed wage register serves as the supporting document. An independent manager should also follow up on long-outstanding unclaimed wages to detect potential ghost employees."
+  },
+  {
+    q: "Formulate a VALIDITY control objective for the calculation and preparation of wages:",
+    opts: [
+      "The payroll clerk must verify hours worked on clock cards before calculating wages",
+      "To ensure that payment of wages takes place at authorised tariffs/rates",
+      "To ensure that all wage transactions are recorded in the wages journal",
+      "Wages must only be paid after the foreman approves the clock cards"
+    ],
+    correct: 1,
+    explain: "Correct: 'To ensure that payment of wages takes place at authorised tariffs/rates.' This is a properly formulated validity objective — it starts with 'To ensure that', contains no people/actions/documents, and addresses a validity risk (payment at unauthorised rates)."
+  },
+  {
+    q: "What is the consequence of NOT performing a reconciliation of the current week's wages journal to the prior week?",
+    opts: [
+      "The wage journal cannot be signed by the payroll manager",
+      "Employees will not receive their wage slips",
+      "Unusual increases, new fictitious employees, or terminated employees still being paid will not be detected",
+      "The clock cards cannot be returned to the safe"
+    ],
+    correct: 2,
+    explain: "The prior period reconciliation is a key detective control. Without it: a new ghost employee added to payroll won't be flagged; an employee who was dismissed but not removed from payroll continues to be paid; and unusual increases granted without authorisation go unnoticed."
+  },
+  {
+    q: "What must happen BEFORE finalising an employee's appointment? (Select the BEST answer)",
+    opts: [
+      "The employee must sign the wage pay-out register",
+      "References must be followed up, criminal record checked, qualifications verified, ID copied, proof of address and bank details obtained",
+      "The foreman must approve the appointment on the timekeeping form",
+      "The payroll clerk must add the employee to the current week's wages journal"
+    ],
+    correct: 1,
+    explain: "Before finalising appointment: follow up references, check criminal record, verify qualifications against job specs, check aptitude/competency test results, make copy of ID, obtain proof of address, and obtain bank account details. These controls prevent unsuitable, fictitious, or fraudulent appointments."
+  },
+  {
+    q: "Why must supporting documents (salary journal, wage journal) be CANCELLED after EFT payment is released?",
+    opts: [
+      "To confirm that the documents are no longer needed for record-keeping purposes",
+      "To comply with SARS requirements for document retention",
+      "To prevent the same documents from being used to authorise a duplicate payment",
+      "Because the financial manager must destroy all confidential documents after payment"
+    ],
+    correct: 2,
+    explain: "Supporting documents must be stamped 'PAID' or 'CANCELLED' after the EFT is released. This prevents them from being resubmitted to authorise a second payment for the same period — preventing double payment fraud. This is the same control as in the Bank & Cash cycle."
+  },
+  {
+    q: "Which person should NOT be involved in both the preparation of the wages journal AND the physical cash pay-out of wages?",
+    opts: [
+      "The financial manager — they should only review the journal",
+      "The payroll clerk — insufficient SoD if the same person prepares the journal and has access to the cash",
+      "The HR manager — they should only maintain personnel records",
+      "The line manager — they should only supervise timekeeping"
+    ],
+    correct: 1,
+    explain: "Segregation of duties requires that the person who prepares the wage journal (records the amounts) must NOT also have access to or distribute the physical cash. If the same person does both, they can manipulate amounts in the journal and pocket the difference without detection."
+  }
+];
+
+let currentQ = 0, answered = [], score = 0;
+
+function renderQ() {
+  const q = questions[currentQ];
+  document.getElementById('quiz-q').textContent = `Q${currentQ+1}. ${q.q}`;
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(i);
+    if (answered[currentQ] !== undefined) {
+      btn.disabled = true;
+      if (i === q.correct) btn.classList.add('correct');
+      else if (i === answered[currentQ]) btn.classList.add('wrong');
+    }
+    opts.appendChild(btn);
+  });
+  const fb = document.getElementById('quiz-feedback');
+  if (answered[currentQ] !== undefined) {
+    fb.textContent = '💡 ' + q.explain;
+    fb.className = 'quiz-feedback show ' + (answered[currentQ] === q.correct ? 'good' : 'bad');
+  } else { fb.className = 'quiz-feedback'; }
+  document.getElementById('quiz-progress').textContent = `${currentQ+1} / ${questions.length} · Score: ${score}`;
+  document.getElementById('btn-prev').disabled = currentQ === 0;
+  document.getElementById('btn-next').textContent = currentQ === questions.length - 1 ? 'Finish' : 'Next →';
+}
+
+function selectAnswer(i) {
+  if (answered[currentQ] !== undefined) return;
+  answered[currentQ] = i;
+  if (i === questions[currentQ].correct) score++;
+  renderQ();
+}
+
+function nextQ() {
+  if (currentQ === questions.length - 1) {
+    document.getElementById('quiz-container').style.display = 'none';
+    document.getElementById('quiz-score').style.display = 'block';
+    document.getElementById('final-score').textContent = `${score} / ${questions.length}`;
+  } else { currentQ++; renderQ(); }
+}
+
+function prevQ() { if (currentQ > 0) { currentQ--; renderQ(); } }
+
+function restartQuiz() {
+  currentQ = 0; answered = []; score = 0;
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('quiz-score').style.display = 'none';
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>

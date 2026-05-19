@@ -1,0 +1,966 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Auditing A2S1 – Inventory & Production Cycle</title>
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=Source+Sans+3:wght@300;400;600&display=swap');
+
+  :root {
+    --navy: #1a2744;
+    --gold: #c8a96e;
+    --cream: #f8f5f0;
+    --teal: #2a7c6f;
+    --red: #b83232;
+    --light: #ffffff;
+    --muted: #6b7280;
+    --border: #e2d9cc;
+  }
+
+  * { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    font-family: 'Source Sans 3', sans-serif;
+    background: var(--cream);
+    color: var(--navy);
+    min-height: 100vh;
+  }
+
+  header {
+    background: var(--navy);
+    color: white;
+    padding: 28px 32px 20px;
+    position: sticky; top: 0; z-index: 100;
+    box-shadow: 0 4px 20px rgba(0,0,0,0.25);
+  }
+
+  header h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.5rem;
+    color: var(--gold);
+    letter-spacing: 0.5px;
+  }
+
+  header p {
+    font-size: 0.8rem;
+    color: #aab;
+    margin-top: 3px;
+  }
+
+  .exam-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    font-size: 0.7rem;
+    font-weight: 700;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-top: 8px;
+  }
+
+  nav {
+    display: flex;
+    gap: 8px;
+    padding: 14px 32px;
+    background: #f0ebe3;
+    border-bottom: 1px solid var(--border);
+    overflow-x: auto;
+    flex-wrap: wrap;
+  }
+
+  nav button {
+    background: white;
+    border: 1.5px solid var(--border);
+    border-radius: 6px;
+    padding: 7px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.82rem;
+    font-weight: 600;
+    color: var(--navy);
+    cursor: pointer;
+    transition: all 0.18s;
+    white-space: nowrap;
+  }
+
+  nav button:hover, nav button.active {
+    background: var(--navy);
+    color: var(--gold);
+    border-color: var(--navy);
+  }
+
+  main {
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 30px 24px 60px;
+  }
+
+  .section { display: none; }
+  .section.active { display: block; }
+
+  h2 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.6rem;
+    margin-bottom: 6px;
+    color: var(--navy);
+  }
+
+  .subtitle {
+    color: var(--muted);
+    font-size: 0.9rem;
+    margin-bottom: 24px;
+    border-bottom: 2px solid var(--gold);
+    padding-bottom: 10px;
+  }
+
+  /* Cards */
+  .card {
+    background: white;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 16px;
+    border-left: 4px solid var(--gold);
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+  }
+
+  .card.teal { border-left-color: var(--teal); }
+  .card.red  { border-left-color: var(--red);  }
+  .card.navy { border-left-color: var(--navy); }
+
+  .card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    margin-bottom: 10px;
+    color: var(--navy);
+  }
+
+  .card ul { padding-left: 18px; }
+  .card ul li { margin-bottom: 6px; font-size: 0.9rem; line-height: 1.5; }
+
+  .tag {
+    display: inline-block;
+    font-size: 0.68rem;
+    font-weight: 700;
+    letter-spacing: 0.8px;
+    text-transform: uppercase;
+    padding: 2px 8px;
+    border-radius: 4px;
+    margin-bottom: 8px;
+  }
+
+  .tag.v { background: #dff0da; color: #2a6e1f; }
+  .tag.a { background: #ddeeff; color: #1a4a7a; }
+  .tag.c { background: #fff0d4; color: #7a4a00; }
+
+  /* Table */
+  .wrc-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.85rem;
+    background: white;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    margin-bottom: 20px;
+  }
+
+  .wrc-table th {
+    background: var(--navy);
+    color: var(--gold);
+    font-family: 'Playfair Display', serif;
+    padding: 12px 14px;
+    text-align: left;
+    font-size: 0.9rem;
+  }
+
+  .wrc-table td {
+    padding: 12px 14px;
+    border-bottom: 1px solid #f0ebe3;
+    vertical-align: top;
+    line-height: 1.5;
+  }
+
+  .wrc-table tr:last-child td { border-bottom: none; }
+  .wrc-table tr:nth-child(even) td { background: #faf8f5; }
+
+  .wrc-table td:nth-child(1) { font-weight: 600; color: var(--red); width: 28%; }
+  .wrc-table td:nth-child(2) { color: #555; width: 32%; }
+  .wrc-table td:nth-child(3) { color: var(--teal); font-weight: 600; width: 40%; }
+
+  /* Quiz */
+  .quiz-card {
+    background: white;
+    border-radius: 12px;
+    padding: 28px;
+    box-shadow: 0 2px 12px rgba(0,0,0,0.09);
+    margin-bottom: 20px;
+  }
+
+  .quiz-q {
+    font-family: 'Playfair Display', serif;
+    font-size: 1.05rem;
+    color: var(--navy);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .quiz-options { display: flex; flex-direction: column; gap: 10px; }
+
+  .quiz-options button {
+    text-align: left;
+    background: #f8f5f0;
+    border: 2px solid var(--border);
+    border-radius: 8px;
+    padding: 12px 16px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: all 0.15s;
+    line-height: 1.4;
+  }
+
+  .quiz-options button:hover:not(:disabled) {
+    border-color: var(--navy);
+    background: #eef1f8;
+  }
+
+  .quiz-options button.correct  { background: #e6f4e6; border-color: var(--teal); color: #1a5c1a; font-weight: 600; }
+  .quiz-options button.wrong    { background: #fce8e8; border-color: var(--red);  color: var(--red);  }
+
+  .quiz-feedback {
+    margin-top: 14px;
+    padding: 12px 16px;
+    border-radius: 8px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+    display: none;
+  }
+
+  .quiz-feedback.show { display: block; }
+  .quiz-feedback.good { background: #e6f4e6; color: #1a5c1a; border-left: 3px solid var(--teal); }
+  .quiz-feedback.bad  { background: #fce8e8; color: #7a1a1a; border-left: 3px solid var(--red); }
+
+  .quiz-nav {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-top: 20px;
+  }
+
+  .quiz-nav button {
+    background: var(--navy);
+    color: var(--gold);
+    border: none;
+    border-radius: 7px;
+    padding: 10px 22px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-weight: 600;
+    font-size: 0.88rem;
+    cursor: pointer;
+    transition: opacity 0.15s;
+  }
+
+  .quiz-nav button:hover { opacity: 0.85; }
+  .quiz-nav button:disabled { opacity: 0.3; cursor: not-allowed; }
+
+  .quiz-progress {
+    font-size: 0.82rem;
+    color: var(--muted);
+    font-weight: 600;
+  }
+
+  .score-badge {
+    display: inline-block;
+    background: var(--gold);
+    color: var(--navy);
+    font-weight: 700;
+    padding: 4px 14px;
+    border-radius: 20px;
+    font-size: 0.85rem;
+  }
+
+  /* Documents section */
+  .doc-flow {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 600px) {
+    .doc-flow { grid-template-columns: 1fr; }
+  }
+
+  .doc-box {
+    background: white;
+    border-radius: 10px;
+    padding: 16px;
+    text-align: center;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.07);
+    border-top: 3px solid var(--gold);
+  }
+
+  .doc-box h4 {
+    font-size: 0.82rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: var(--navy);
+    margin-bottom: 8px;
+  }
+
+  .doc-box p { font-size: 0.78rem; color: var(--muted); line-height: 1.5; }
+  .doc-box .arrow { font-size: 1.4rem; color: var(--gold); margin: 8px 0 0; }
+
+  .tip-box {
+    background: #fffbe6;
+    border: 1.5px solid var(--gold);
+    border-radius: 8px;
+    padding: 14px 18px;
+    margin-bottom: 14px;
+    font-size: 0.88rem;
+    line-height: 1.5;
+  }
+
+  .tip-box strong { color: var(--navy); }
+
+  .highlight { background: #fff3cd; padding: 1px 4px; border-radius: 3px; font-weight: 600; }
+
+  .pill {
+    display: inline-block;
+    font-size: 0.72rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    padding: 3px 10px;
+    border-radius: 20px;
+    letter-spacing: 0.6px;
+    margin-right: 4px;
+    margin-bottom: 4px;
+  }
+
+  .pill.blue  { background: #ddeeff; color: #1a4a7a; }
+  .pill.green { background: #dff0da; color: #1a5c1a; }
+  .pill.red   { background: #fce8e8; color: #7a1a1a; }
+
+  .accordion-btn {
+    width: 100%;
+    text-align: left;
+    background: var(--navy);
+    color: white;
+    border: none;
+    border-radius: 8px;
+    padding: 14px 18px;
+    font-family: 'Source Sans 3', sans-serif;
+    font-size: 0.92rem;
+    font-weight: 600;
+    cursor: pointer;
+    margin-bottom: 4px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.15s;
+  }
+
+  .accordion-btn:hover { background: #2a3a5a; }
+  .accordion-btn .chevron { font-size: 0.75rem; transition: transform 0.2s; }
+  .accordion-btn.open .chevron { transform: rotate(180deg); }
+
+  .accordion-body {
+    display: none;
+    background: white;
+    border-radius: 0 0 8px 8px;
+    padding: 16px 18px;
+    margin-bottom: 12px;
+    border: 1.5px solid #e2d9cc;
+    border-top: none;
+    font-size: 0.88rem;
+    line-height: 1.6;
+  }
+
+  .accordion-body.open { display: block; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Auditing A2S1 – Inventory & Production Cycle</h1>
+  <p>Interactive Study Guide · Exam Friday</p>
+  <span class="exam-badge">📚 Exam Prep</span>
+</header>
+
+<nav>
+  <button class="active" onclick="showSection('overview')">📋 Overview</button>
+  <button onclick="showSection('objectives')">🎯 Control Objectives</button>
+  <button onclick="showSection('documents')">📄 Documents & Flow</button>
+  <button onclick="showSection('wrc')">⚠️ Weaknesses (WRC)</button>
+  <button onclick="showSection('stockcount')">🔢 Inventory Count</button>
+  <button onclick="showSection('quiz')">✏️ Quiz Yourself</button>
+</nav>
+
+<main>
+
+<!-- OVERVIEW -->
+<div class="section active" id="overview">
+  <h2>Overview</h2>
+  <p class="subtitle">What you need to know about this cycle & how questions are asked</p>
+
+  <div class="tip-box">
+    <strong>📌 Exam Tip from your revision slides:</strong> Questions come in 3 types:
+    (1) Design a Perfect System, (2) Weaknesses / Consequences / Recommendations — compared to the perfect system, and (3) Control Objectives — identify or formulate using <span class="highlight">V · A · C</span>
+  </div>
+
+  <div class="card">
+    <h3>What is the Inventory & Production Cycle?</h3>
+    <ul>
+      <li>Focuses on <strong>managing, safeguarding, and accounting for inventory</strong></li>
+      <li>For manufacturers: also controls the <strong>production process</strong> and <strong>movement of inventory</strong> (raw materials → WIP → finished goods)</li>
+      <li>Links with the Purchases & Payments cycle (receiving goods) and Sales & Receipts cycle (dispatching goods)</li>
+    </ul>
+  </div>
+
+  <div class="card teal">
+    <h3>The Perfect System Principle</h3>
+    <ul>
+      <li><strong>Documents drive the process</strong> — every movement needs a document</li>
+      <li><strong>Segregation of Duties (SoD)</strong> — the person who requests ≠ person who issues ≠ person who records</li>
+      <li><strong>Pre-numbered documents</strong> — allows sequence checks, detects missing/duplicates</li>
+      <li><strong>Two people</strong> at key points (receiving, counting)</li>
+      <li><strong>Independent review</strong> — someone checks the work of the person who prepared it</li>
+      <li><strong>Physical vs Records reconciliation</strong> — perpetual inventory must be reconciled to physical counts</li>
+    </ul>
+  </div>
+
+  <div class="card navy">
+    <h3>V · A · C — The 3 Control Objectives</h3>
+    <ul>
+      <li><span class="pill blue">Validity</span> Authorised, occurred, during correct period, supported by documents</li>
+      <li><span class="pill green">Accuracy</span> Correct amounts, quantities, prices, calculations, classification</li>
+      <li><span class="pill red">Completeness</span> All transactions recorded, none omitted, recorded timeously</li>
+    </ul>
+  </div>
+
+  <div class="card red">
+    <h3>S · C · R · R · A · M — Design Question Checklist</h3>
+    <ul>
+      <li><strong>S</strong>egregation of duties</li>
+      <li><strong>C</strong>ustody controls (access to assets)</li>
+      <li><strong>R</strong>eview / authorisation</li>
+      <li><strong>R</strong>ecording (journals, ledgers)</li>
+      <li><strong>A</strong>rithmetical &amp; accounting controls (sequence checks, reconciliations)</li>
+      <li><strong>M</strong>anagement controls (surprise counts, overall oversight)</li>
+    </ul>
+  </div>
+</div>
+
+<!-- CONTROL OBJECTIVES -->
+<div class="section" id="objectives">
+  <h2>Control Objectives</h2>
+  <p class="subtitle">How to formulate them — always start with "To ensure that…" — no people, no actions, no documents</p>
+
+  <div class="tip-box">
+    <strong>🔑 Key Rule:</strong> Control objectives must be written in full sentences. Start with <span class="highlight">"To ensure that…"</span> — <em>no marks</em> for bullet lists without formulation. Do NOT name people, specific actions, or documents in the objective itself.
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Validity Objectives <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul style="padding-left:18px; line-height:2">
+      <li>To ensure that all <strong>recorded production transactions are valid</strong> and are supported by supporting documentation.</li>
+      <li>To ensure that <strong>production transactions and adjustments are authorised</strong> in accordance with company policy.</li>
+      <li>To ensure that recorded inventory movements <strong>actually occurred</strong> during the period.</li>
+      <li>To ensure that <strong>access to warehouses is limited</strong> to authorised staff (prevent theft/unauthorised use).</li>
+      <li>To ensure that credit adjustments for <strong>goods returned are only given</strong> if the customer was previously invoiced for them.</li>
+      <li>To ensure that all <strong>credit adjustments for goods returned are authorised</strong> in terms of company policy.</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Accuracy Objectives <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul style="padding-left:18px; line-height:2">
+      <li>To ensure that <strong>production transactions are recorded accurately</strong> at the correct quantity and amount.</li>
+      <li>To ensure that the <strong>correct quantity and type of goods returned</strong> by a customer are recorded.</li>
+      <li>To ensure that the <strong>correct price of goods returned</strong> is recorded.</li>
+      <li>To ensure that <strong>calculations of credit adjustments</strong> are correct.</li>
+      <li>To ensure that inventory transactions are <strong>classified correctly</strong> (e.g. between WIP and raw materials).</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    Completeness Objectives <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul style="padding-left:18px; line-height:2">
+      <li>To ensure that <strong>all valid production transactions</strong> which occurred are recorded and nothing is left out.</li>
+      <li>To ensure that <strong>all inventory movements are recorded</strong> in the correct financial period.</li>
+      <li>To ensure that <strong>no transactions are omitted</strong> from the perpetual inventory records.</li>
+    </ul>
+  </div>
+
+  <div class="tip-box" style="margin-top:20px">
+    <strong>⚠️ Common Exam Mistake:</strong> Students write "The storeman must compare documents" — that's a <em>control</em>, not an objective. An objective says <em>what</em> you want to achieve, not <em>how</em>.
+  </div>
+</div>
+
+<!-- DOCUMENTS & FLOW -->
+<div class="section" id="documents">
+  <h2>Documents & Transaction Flow</h2>
+  <p class="subtitle">Know every document, its purpose, its details, who prepares it, and how many copies</p>
+
+  <div class="doc-flow">
+    <div class="doc-box">
+      <h4>1. Production Schedule</h4>
+      <p>Initiated by factory manager. Authorises what products to manufacture and allocates work to technicians.</p>
+      <div class="arrow">↓</div>
+    </div>
+    <div class="doc-box">
+      <h4>2. Raw Material Requisition</h4>
+      <p>Prepared by manufacture clerk in production. Requests raw materials from the warehouse. Signed by Factory Manager.</p>
+      <div class="arrow">↓</div>
+    </div>
+    <div class="doc-box">
+      <h4>3. Raw Material Transfer Note (Issue Note)</h4>
+      <p>Prepared by raw material storeman. Authorised by store manager. 3 copies: warehouse / production / accounting.</p>
+      <div class="arrow">↓</div>
+    </div>
+    <div class="doc-box">
+      <h4>4. Finished Goods Transfer Note</h4>
+      <p>Prepared by manufacture clerk. Authorised by factory manager. Transfers FG from production to FG warehouse. 3 copies.</p>
+      <div class="arrow">↓</div>
+    </div>
+    <div class="doc-box">
+      <h4>5. Goods Received Note (GRN)</h4>
+      <p>Prepared by 2 receipts clerks when receiving from supplier. Compared to supplier delivery note + purchase order. Authorised by warehouse manager.</p>
+      <div class="arrow">↓</div>
+    </div>
+    <div class="doc-box">
+      <h4>6. Perpetual Inventory Records</h4>
+      <p>Continuously updated for every movement. Controlled by someone independent of storemen. Reconciled to general ledger and physical count.</p>
+      <div class="arrow">↓</div>
+    </div>
+  </div>
+
+  <div class="card">
+    <h3>What must be on every document? (½ mark each)</h3>
+    <ul>
+      <li><strong>Date</strong> of the transaction</li>
+      <li><strong>Pre-number</strong> (sequential number for sequence checks)</li>
+      <li><strong>Description</strong> of goods (quantity + type)</li>
+      <li><strong>Quantity</strong> of goods</li>
+      <li><strong>Name</strong> of supplier / receiving department</li>
+      <li><strong>Signature</strong> of preparer + authoriser</li>
+    </ul>
+  </div>
+
+  <div class="card teal">
+    <h3>Why 3 copies?</h3>
+    <ul>
+      <li><strong>Copy 1 → Originating department</strong> (proof of request/issue)</li>
+      <li><strong>Copy 2 → Receiving department</strong> (proof of receipt / for comparison)</li>
+      <li><strong>Copy 3 → Accounting department</strong> (to update inventory/perpetual records)</li>
+    </ul>
+  </div>
+
+  <div class="card red">
+    <h3>Perpetual Inventory System — Advantages (S3.13)</h3>
+    <ul>
+      <li>Inventory records are <strong>automatically updated</strong> for every movement</li>
+      <li>Inventory can be <strong>monitored continuously</strong> — complete records always available</li>
+      <li>Inventory can be <strong>reordered in time</strong> when stock is low</li>
+      <li>Comparison between <strong>actual physical inventory</strong> and theoretical records can be done at any time</li>
+      <li>Makes inventory counts <strong>faster and easier</strong> to compare with records</li>
+    </ul>
+  </div>
+</div>
+
+<!-- WRC TABLE -->
+<div class="section" id="wrc">
+  <h2>Weaknesses, Consequences & Recommendations</h2>
+  <p class="subtitle">The most common exam question type — compare to the perfect system. Each weakness must link to its consequence and recommendation.</p>
+
+  <div class="tip-box">
+    <strong>📌 Exam Tip:</strong> Each row is 3 marks: 1 for weakness · 1 for consequence · 1 for recommendation. Consequences often relate to fraud, theft, errors, or misstatement. Recommendations mirror the weakness — if something is missing, recommend adding it.
+  </div>
+
+  <p style="font-weight:600; margin-bottom:10px; color:var(--navy)">Production & Inventory Movement Weaknesses (from S3.13 & S3.26)</p>
+  <table class="wrc-table">
+    <tr><th>Weakness</th><th>Consequence</th><th>Recommendation</th></tr>
+    <tr>
+      <td>No formal production planning / production schedule</td>
+      <td>Work is allocated informally — production may be uncontrolled, goods manufactured without authorisation</td>
+      <td>Factory manager must compile a formal pre-approved production schedule and allocate work to each technician</td>
+    </tr>
+    <tr>
+      <td>Technicians have direct access to the component warehouse — select items themselves</td>
+      <td>Raw materials can be stolen or incorrectly issued — incorrect quantities used in production</td>
+      <td>Appoint a foreman in warehouse; technicians must not have access; all issues via a requisition form</td>
+    </tr>
+    <tr>
+      <td>No documents to regulate the request or distribution of components (no raw material requisition)</td>
+      <td>Incorrect quantities can be issued; responsibility for fraud/error cannot be allocated</td>
+      <td>Technician completes a pre-numbered raw material requisition — signed by them and approved by production manager before issue</td>
+    </tr>
+    <tr>
+      <td>Raw material issue note is NOT pre-numbered AND no sequence check is performed</td>
+      <td>Missing or duplicate issue notes may not be detected — incorrect classification between WIP and raw materials; out-of-stock situations possible</td>
+      <td>Pre-number all issue notes; independent person reviews sequence regularly and follows up on missing/duplicate numbers</td>
+    </tr>
+    <tr>
+      <td>Head raw material storeman does NOT compare quality, quantity and description of physical raw materials to the requisition and transfer note</td>
+      <td>Incorrect raw materials may be issued; raw materials can be stolen; financial losses due to incorrect production</td>
+      <td>Storeman must compare QQD of physical goods to issue note; follow up differences; sign as evidence</td>
+    </tr>
+    <tr>
+      <td>Preparer of raw materials requisition does NOT sign as proof of preparation</td>
+      <td>Responsibility cannot be allocated for fraud or error</td>
+      <td>Preparer must sign the raw materials requisition as proof of preparation</td>
+    </tr>
+    <tr>
+      <td>No follow-up when production takes too long</td>
+      <td>Production delays go undetected; resources wasted; deadlines missed</td>
+      <td>Production schedule must include time estimates; production manager must regularly follow up on progress</td>
+    </tr>
+    <tr>
+      <td>No documents issued when finished goods are transferred to FG warehouse</td>
+      <td>FG can be stolen in transit; inventory records for FG not updated accurately; production output cannot be verified</td>
+      <td>Technician completes a pre-numbered FG transfer note (in duplicate); storeman in FG warehouse compares and signs; one copy remains in each location</td>
+    </tr>
+    <tr>
+      <td>No perpetual inventory records in component or FG warehouse</td>
+      <td>Entity does not know available inventory at any time; theft/losses go undetected; cannot reconcile physical to records</td>
+      <td>Implement a perpetual inventory system under a responsible officer (not the storeman); reconcile to general ledger and to physical count regularly; follow up differences</td>
+    </tr>
+  </table>
+
+  <p style="font-weight:600; margin-bottom:10px; color:var(--navy)">Goods Returned / Receiving Weaknesses (from S3.27)</p>
+  <table class="wrc-table">
+    <tr><th>Weakness</th><th>Consequence</th><th>Recommendation</th></tr>
+    <tr>
+      <td>Only one receipts clerk receives delivered goods (instead of two)</td>
+      <td>Incorrect quantities/descriptions received without being detected; theft possible without witness</td>
+      <td>Two receipts clerks must receive all delivered goods together</td>
+    </tr>
+    <tr>
+      <td>No GRN is prepared when goods are received from suppliers</td>
+      <td>No record of what was received; incorrect goods/quantities may be paid for; inventory records not updated</td>
+      <td>Receipts clerks must prepare a pre-numbered GRN with all required details (date, supplier, DN reference, description, quantity) — both clerks sign</td>
+    </tr>
+  </table>
+</div>
+
+<!-- STOCK COUNT -->
+<div class="section" id="stockcount">
+  <h2>Inventory Count Procedures</h2>
+  <p class="subtitle">A very popular exam topic — know the perfect system for Before / During / After the count</p>
+
+  <div class="tip-box">
+    <strong>💡 From S3.27:</strong> Stock-take weakness questions follow the same WRC format. Common weaknesses: verbal instructions, same team counting their own area, no second team, no authorisation for changes to count sheets, no sequence check on count sheets, no instructions for damaged/obsolete goods.
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    BEFORE the Count <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul style="padding-left:18px; line-height:2">
+      <li><strong>Written instructions</strong> must be given to all counters and supervisors (not verbal)</li>
+      <li>Decide on date — year-end count as close to year-end as possible</li>
+      <li>Inform all parties involved early; arrange for enough staff</li>
+      <li>Warehouse must be packed <strong>neatly</strong> — similar items together, no open spaces</li>
+      <li>Count sheets must be <strong>pre-numbered</strong>; maintain a register of count sheets issued</li>
+      <li>Counters must complete count sheets <strong>in ink</strong> (no pencil, no Tippex)</li>
+      <li>Any changes must be <strong>authorised by the supervisor</strong> — supervisor recounts and initials</li>
+      <li>Allocate <strong>teams and supervisors</strong> — counters should NOT count their own area (no daily access)</li>
+      <li>Each warehouse area should be counted by <strong>two independent teams</strong> — differences followed up</li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    DURING the Count <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul style="padding-left:18px; line-height:2">
+      <li>Count <strong>all stock</strong>, including outside warehouses and warehouses elsewhere</li>
+      <li><strong>Mark items</strong> as soon as counted (sticker) to prevent double counting</li>
+      <li><strong>Limit movement</strong> of people during the count — only counters, supervisors, co-ordinator</li>
+      <li>Any inventory received or dispatched during the count must be <strong>kept separate</strong> and noted separately (cut-off)</li>
+      <li>Identify and <strong>exclude inventory</strong> belonging to third parties</li>
+      <li>Work <strong>systematically</strong> (start left, top of shelf, then floor)</li>
+      <li>After counting a section, team members compare results and follow up differences</li>
+      <li>Damaged, obsolete, slow-moving items must be <strong>identified and counted separately</strong></li>
+    </ul>
+  </div>
+
+  <button class="accordion-btn" onclick="toggleAccordion(this)">
+    AFTER the Count <span class="chevron">▼</span>
+  </button>
+  <div class="accordion-body">
+    <ul style="padding-left:18px; line-height:2">
+      <li>Supervisor receives ALL count sheets back — checks that <strong>all are returned</strong> (sequence check)</li>
+      <li>Supervisor checks for <strong>unauthorised changes</strong> — all changes must be initialled</li>
+      <li>Both supervisors and co-ordinator should check <strong>number sequencing</strong> of count sheets (identify missing/duplicate)</li>
+      <li>Co-ordinator <strong>compares two teams' count sheets</strong> — follows up differences</li>
+      <li>Count results <strong>reconciled to perpetual inventory records</strong> — differences investigated</li>
+      <li>Reasons for differences identified: theft, recording errors, etc.</li>
+      <li>Perpetual records <strong>adjusted</strong> after authorisation if found to be incorrect</li>
+      <li>Damaged/obsolete items valued separately — do not overstate inventory value</li>
+    </ul>
+  </div>
+
+  <div class="card red" style="margin-top:20px">
+    <h3>Top Stock-Count Weaknesses from S3.27 (exam-tested)</h3>
+    <ul>
+      <li>Only <strong>verbal instructions</strong> given → counters may forget and count incorrectly → give written instructions</li>
+      <li>Team G counts <strong>their own daily area</strong> → fraud undetected → another team with protective gear should count area 4</li>
+      <li><strong>Only one team</strong> counts area 4 → errors/fraud undetected → allocate a second independent team</li>
+      <li><strong>No authorisation</strong> of changes on count sheets → fraudulent changes go undetected → supervisor must recount and sign every change</li>
+      <li><strong>No sequence check</strong> of count sheets → count sheets can be lost or duplicated → supervisors AND co-ordinator check numbering</li>
+      <li><strong>No instructions</strong> to look for damaged/obsolete goods → inventory overvalued → written instructions to identify and separate such items</li>
+    </ul>
+  </div>
+</div>
+
+<!-- QUIZ -->
+<div class="section" id="quiz">
+  <h2>Quiz Yourself</h2>
+  <p class="subtitle">Test your knowledge — exam-style questions based on your study material</p>
+
+  <div class="quiz-card" id="quiz-container">
+    <div class="quiz-q" id="quiz-q"></div>
+    <div class="quiz-options" id="quiz-options"></div>
+    <div class="quiz-feedback" id="quiz-feedback"></div>
+    <div class="quiz-nav">
+      <button onclick="prevQ()" id="btn-prev" disabled>← Prev</button>
+      <span class="quiz-progress" id="quiz-progress"></span>
+      <button onclick="nextQ()" id="btn-next">Next →</button>
+    </div>
+  </div>
+  <div id="quiz-score" style="display:none; text-align:center; padding:30px; background:white; border-radius:12px; box-shadow:0 2px 12px rgba(0,0,0,0.09)">
+    <h3 style="font-family:'Playfair Display',serif; font-size:1.4rem; margin-bottom:12px">Quiz Complete!</h3>
+    <p style="font-size:1rem; margin-bottom:16px">Your score: <span class="score-badge" id="final-score"></span></p>
+    <button onclick="restartQuiz()" style="background:var(--navy);color:var(--gold);border:none;border-radius:7px;padding:12px 28px;font-family:'Source Sans 3',sans-serif;font-weight:600;font-size:0.9rem;cursor:pointer">Try Again</button>
+  </div>
+</div>
+
+</main>
+
+<script>
+function showSection(id) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('nav button').forEach(b => b.classList.remove('active'));
+  event.target.classList.add('active');
+  window.scrollTo({top:0, behavior:'smooth'});
+}
+
+function toggleAccordion(btn) {
+  btn.classList.toggle('open');
+  const body = btn.nextElementSibling;
+  body.classList.toggle('open');
+}
+
+const questions = [
+  {
+    q: "How must control objectives always be formulated in an exam?",
+    opts: [
+      "Start with the name of the person responsible",
+      "Start with 'To ensure that…' and write in full sentences",
+      "List them as bullet points with the control name",
+      "Start with the document used to achieve the objective"
+    ],
+    correct: 1,
+    explain: "Control objectives must always start with 'To ensure that…' written as full sentences. No marks are awarded for listing objectives without proper formulation. Importantly, do NOT include people, actions, or documents in the objective."
+  },
+  {
+    q: "A technician at BioTech Ltd selects raw materials from the warehouse himself without completing any documentation. What is the WEAKNESS?",
+    opts: [
+      "The technician does not sign the count sheet",
+      "There is insufficient access control over component inventory — technicians access the warehouse directly",
+      "No perpetual inventory records exist in the warehouse",
+      "The production schedule has not been prepared"
+    ],
+    correct: 1,
+    explain: "Insufficient access control over component inventory is the weakness. Technicians should never have direct access to the warehouse. A foreman must be appointed and all issues must go through a pre-numbered raw material requisition."
+  },
+  {
+    q: "Which document is prepared by the raw material storeman when issuing raw materials to production?",
+    opts: [
+      "Raw Material Requisition",
+      "Finished Goods Transfer Note",
+      "Raw Material Transfer Note (Issue Note)",
+      "Goods Received Note (GRN)"
+    ],
+    correct: 2,
+    explain: "The Raw Material Transfer Note (also called the Raw Material Issue Note) is prepared by the raw material storeman and authorised by the store manager. It is prepared in triplicate: copy 1 stays in warehouse, copy 2 goes to production, copy 3 goes to accounting."
+  },
+  {
+    q: "What is the CONSEQUENCE of not having pre-numbered raw material issue notes with no sequence check?",
+    opts: [
+      "Production will be delayed due to insufficient raw materials",
+      "The store manager cannot sign the issue note",
+      "Missing or duplicate issue notes may not be detected, causing incorrect classification between WIP and raw materials",
+      "The perpetual inventory records cannot be updated"
+    ],
+    correct: 2,
+    explain: "Without pre-numbering and a sequence check, missing or duplicate issue notes go undetected. This causes incorrect classification between WIP and raw materials in the accounting records — and could mask theft or fraud."
+  },
+  {
+    q: "During an inventory count, Team G (who has daily access to warehouse area 4) is assigned to count that area. What is the RECOMMENDATION?",
+    opts: [
+      "Team G should count with one extra person from management",
+      "Another team (e.g. teams A–F) with the necessary protective clothing should be assigned to count area 4 instead",
+      "Team G should only count half of area 4",
+      "The count should be postponed until another day"
+    ],
+    correct: 1,
+    explain: "Counters should never count areas to which they have daily access — this prevents undetected fraud. One of the other count teams (A–F) should be provided with the necessary protective clothing and assigned to count warehouse area 4."
+  },
+  {
+    q: "What is the consequence if inventory count instructions are given VERBALLY only?",
+    opts: [
+      "Damaged stock will not be identified",
+      "The co-ordinator cannot sign off on the count sheets",
+      "Counters may forget the instructions and consequently perform the count incorrectly",
+      "The sequence check of count sheets cannot be performed"
+    ],
+    correct: 2,
+    explain: "Verbal instructions can be forgotten or misunderstood. The recommendation is that written count instructions must be prepared and distributed to all counters and supervisors before the count begins."
+  },
+  {
+    q: "Which THREE parties should receive copies of a Raw Material Transfer Note (Issue Note)?",
+    opts: [
+      "Production / Finished goods warehouse / Accounting",
+      "Raw material warehouse / Production / Accounting",
+      "Supplier / Raw material warehouse / Production",
+      "Factory manager / Production / Co-ordinator"
+    ],
+    correct: 1,
+    explain: "The Raw Material Transfer Note is prepared in triplicate: Copy 1 stays in the raw material warehouse (proof of issue), Copy 2 goes to Production (proof of receipt of materials), Copy 3 goes to Accounting (to update inventory records)."
+  },
+  {
+    q: "What is the 'V' in VAC when formulating control objectives?",
+    opts: [
+      "Verification — documents must be verified by management",
+      "Validity — transactions are authorised, occurred, within the period, and supported by documentation",
+      "Volume — the correct quantity of goods is recorded",
+      "Valuation — goods are recorded at the correct value"
+    ],
+    correct: 1,
+    explain: "Validity covers: authorisation, transactions that actually occurred, recorded in the correct period, and supported by adequate documentation. For inventory this means e.g. 'To ensure that all inventory movements are authorised in accordance with company policy.'"
+  },
+  {
+    q: "List TWO advantages of a perpetual inventory system.",
+    opts: [
+      "It eliminates the need for physical inventory counts and reduces staff costs",
+      "Inventory records are automatically updated for movements AND inventory can be monitored continuously with complete records always available",
+      "It prevents theft and ensures all goods returned by customers are recorded",
+      "It eliminates the need for segregation of duties in the warehouse"
+    ],
+    correct: 1,
+    explain: "Key advantages: (1) Records automatically updated for every movement, (2) Inventory monitored continuously, (3) Can reorder in time when stock is low, (4) Physical vs theoretical comparison can be done at any time, (5) Makes inventory counts faster."
+  },
+  {
+    q: "After the inventory count, the supervisor's role includes which of the following?",
+    opts: [
+      "Preparing the financial statements based on the count results",
+      "Depositing all cash collected during the count",
+      "Checking that all count sheets are returned, verifying no unauthorised changes, and checking number sequences",
+      "Assigning new counting teams and restarting the count from the beginning"
+    ],
+    correct: 2,
+    explain: "After the count, the supervisor collects ALL count sheets, checks that all are returned (sequence check), ensures there are no unauthorised changes (all changes must be initialled and recounted), and then hands them over to the co-ordinator."
+  },
+  {
+    q: "When goods returned by a customer are received, what document should be prepared?",
+    opts: [
+      "A purchase order",
+      "A raw material requisition",
+      "A pre-numbered credit note / goods returned note, authorised per company policy",
+      "A finished goods transfer note"
+    ],
+    correct: 2,
+    explain: "For goods returned, a pre-numbered goods returned note (credit note) must be prepared. It must be authorised to confirm the customer was previously invoiced, and must record the correct quantity, description, and price of goods returned."
+  },
+  {
+    q: "What does the 'C' in VAC stand for and give an example objective for the inventory cycle?",
+    opts: [
+      "Classification — To ensure goods are stored in the correct warehouse",
+      "Completeness — To ensure all valid production transactions that occurred are recorded and nothing is omitted",
+      "Control — To ensure management controls are applied to all transactions",
+      "Cut-off — To ensure goods received after year-end are excluded from inventory"
+    ],
+    correct: 1,
+    explain: "Completeness means all transactions are recorded, none are omitted, and all are recorded timeously. Example: 'To ensure that all valid production transactions which occurred are recorded and nothing is left out (issuing of raw materials and recording of finished goods).'"
+  }
+];
+
+let currentQ = 0;
+let answered = [];
+let score = 0;
+
+function renderQ() {
+  const q = questions[currentQ];
+  document.getElementById('quiz-q').textContent = `Q${currentQ+1}. ${q.q}`;
+  const opts = document.getElementById('quiz-options');
+  opts.innerHTML = '';
+  q.opts.forEach((opt, i) => {
+    const btn = document.createElement('button');
+    btn.textContent = opt;
+    btn.onclick = () => selectAnswer(i);
+    if (answered[currentQ] !== undefined) {
+      btn.disabled = true;
+      if (i === q.correct) btn.classList.add('correct');
+      else if (i === answered[currentQ]) btn.classList.add('wrong');
+    }
+    opts.appendChild(btn);
+  });
+
+  const fb = document.getElementById('quiz-feedback');
+  if (answered[currentQ] !== undefined) {
+    fb.textContent = '💡 ' + q.explain;
+    fb.className = 'quiz-feedback show ' + (answered[currentQ] === q.correct ? 'good' : 'bad');
+  } else {
+    fb.className = 'quiz-feedback';
+  }
+
+  document.getElementById('quiz-progress').textContent = `${currentQ+1} / ${questions.length} · Score: ${score}`;
+  document.getElementById('btn-prev').disabled = currentQ === 0;
+  document.getElementById('btn-next').textContent = currentQ === questions.length - 1 ? 'Finish' : 'Next →';
+}
+
+function selectAnswer(i) {
+  if (answered[currentQ] !== undefined) return;
+  answered[currentQ] = i;
+  if (i === questions[currentQ].correct) score++;
+  renderQ();
+}
+
+function nextQ() {
+  if (currentQ === questions.length - 1) {
+    document.getElementById('quiz-container').style.display = 'none';
+    document.getElementById('quiz-score').style.display = 'block';
+    document.getElementById('final-score').textContent = `${score} / ${questions.length}`;
+  } else {
+    currentQ++;
+    renderQ();
+  }
+}
+
+function prevQ() {
+  if (currentQ > 0) { currentQ--; renderQ(); }
+}
+
+function restartQuiz() {
+  currentQ = 0; answered = []; score = 0;
+  document.getElementById('quiz-container').style.display = 'block';
+  document.getElementById('quiz-score').style.display = 'none';
+  renderQ();
+}
+
+renderQ();
+</script>
+</body>
+</html>
